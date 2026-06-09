@@ -3,7 +3,7 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-*.sqlite3
+
 staticfiles/
 media/
 .env
