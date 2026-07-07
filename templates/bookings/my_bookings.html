@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}My Tickets - EventPass{% endblock %}
+
+{% block content %}
+<div class="card card-custom p-4 shadow-sm my-4 animated-fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-receipt me-2 text-primary"></i>My Ticket Wallet</h3>
+            <p class="text-muted small mb-0">View all your event registrations and download tickets.</p>
+        </div>
+        <a href="{% url 'event_list' %}" class="btn btn-primary-custom btn-sm">Find More Events</a>
+    </div>
+
+    {% if bookings %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Booking Ref</th>
+                        <th scope="col">Event</th>
+                        <th scope="col">Date & Time</th>
+                        <th scope="col">Venue</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                        <tr>
+                            <td>
+                                <code class="small fw-semibold text-secondary">{{ booking.booking_reference|stringformat:".8s" }}...</code>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-dark">{{ booking.event.title }}</span>
+                                <span class="d-block small text-muted">{{ booking.event.category.name }}</span>
+                            </td>
+                            <td>
+                                <span class="small d-block text-dark fw-medium">{{ booking.event.date }}</span>
+                                <span class="small text-muted">{{ booking.event.time }}</span>
+                            </td>
+                            <td>
+                                <span class="small text-muted text-truncate d-inline-block" style="max-width: 150px;">{{ booking.event.venue }}</span>
+                            </td>
+                            <td>
+                                <span class="small fw-semibold">{{ booking.event.ticket_price|floatformat:0 }} FCFA</span>
+                            </td>
+                            <td>
+                                {% if booking.status == 'confirmed' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Confirmed</span>
+                                {% elif booking.status == 'cancelled' %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Cancelled</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if booking.status == 'confirmed' %}
+                                    <a href="{% url 'booking_confirmation' booking_ref=booking.booking_reference %}" class="btn btn-sm btn-primary-custom px-3">
+                                        <i class="fa-solid fa-qrcode me-1"></i> View Ticket
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-secondary" disabled>Locked</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-ticket-simple fa-4x mb-3 text-light"></i>
+            <h5 class="fw-bold">Your Wallet is Empty</h5>
+            <p class="small mb-4">You have not reserved or purchased tickets for any upcoming events yet.</p>
+            <a href="{% url 'event_list' %}" class="btn btn-primary-custom px-4">Browse Events</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

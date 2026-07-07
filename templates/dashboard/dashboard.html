@@ -1,0 +1,760 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - EventPass{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ─── Dashboard Layout ─── */
+    .dash-header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: 20px;
+        padding: 2rem 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .dash-header::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        background: rgba(99,102,241,0.15);
+    }
+    .dash-header::after {
+        content: '';
+        position: absolute;
+        bottom: -60px; left: 30%;
+        width: 300px; height: 300px;
+        border-radius: 50%;
+        background: rgba(16,185,129,0.07);
+    }
+
+    /* ─── Stat Cards ─── */
+    .stat-card {
+        border-radius: 18px;
+        border: 1px solid rgba(226,232,240,0.7);
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        padding: 1.6rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1.2rem;
+        transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 3px;
+        border-radius: 0 0 18px 18px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.10); }
+    .stat-card:hover::after { opacity: 1; }
+    .stat-card.s-indigo::after  { background: var(--primary-color); }
+    .stat-card.s-green::after   { background: #10b981; }
+    .stat-card.s-amber::after   { background: #f59e0b; }
+    .stat-card.s-red::after     { background: #ef4444; }
+    .stat-card.s-blue::after    { background: #3b82f6; }
+    .stat-card.s-purple::after  { background: #8b5cf6; }
+
+    .stat-icon {
+        width: 54px; height: 54px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; flex-shrink: 0;
+    }
+    .si-indigo { background: rgba(99,102,241,0.12); color: var(--primary-color); }
+    .si-green  { background: rgba(16,185,129,0.12); color: #10b981; }
+    .si-amber  { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .si-red    { background: rgba(239,68,68,0.12);  color: #ef4444; }
+    .si-blue   { background: rgba(59,130,246,0.12); color: #3b82f6; }
+    .si-purple { background: rgba(139,92,246,0.12); color: #8b5cf6; }
+
+    .stat-label { font-size: 0.72rem; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.3rem; }
+    .stat-value { font-size: 2rem; font-weight: 800; color: #0f172a; line-height: 1; margin-bottom: 0.2rem; }
+    .stat-sub   { font-size: 0.78rem; color: #94a3b8; }
+    .stat-trend-up   { color: #10b981; font-size: 0.78rem; font-weight: 600; }
+    .stat-trend-down { color: #ef4444; font-size: 0.78rem; font-weight: 600; }
+
+    /* ─── Chart Cards ─── */
+    .chart-card {
+        border-radius: 18px;
+        border: 1px solid rgba(226,232,240,0.7);
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        padding: 1.75rem;
+    }
+    .chart-card .chart-title {
+        font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 0.25rem;
+    }
+    .chart-card .chart-sub {
+        font-size: 0.8rem; color: #94a3b8; margin-bottom: 1.25rem;
+    }
+
+    /* ─── Quick Actions ─── */
+    .quick-action-card {
+        border-radius: 14px;
+        border: 1px solid rgba(226,232,240,0.7);
+        background: #ffffff;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-decoration: none;
+        color: #0f172a;
+        transition: all 0.25s ease;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .quick-action-card:hover {
+        background: #6366f1;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99,102,241,0.35);
+        border-color: transparent;
+    }
+    .quick-action-card:hover .qa-icon { background: rgba(255,255,255,0.2); color: #fff; }
+    .quick-action-card:hover .qa-sub  { color: rgba(255,255,255,0.75); }
+    .qa-icon {
+        width: 44px; height: 44px;
+        border-radius: 11px;
+        background: rgba(99,102,241,0.1);
+        color: var(--primary-color);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; flex-shrink: 0;
+        transition: all 0.25s ease;
+    }
+    .qa-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0; }
+    .qa-sub   { font-size: 0.75rem; color: #94a3b8; transition: color 0.25s ease; }
+
+    /* ─── Management Tabs ─── */
+    .mgmt-card {
+        border-radius: 18px;
+        border: 1px solid rgba(226,232,240,0.7);
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+    .mgmt-tab-header {
+        background: #f8fafc;
+        border-bottom: 1px solid rgba(226,232,240,0.7);
+        padding: 0 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .nav-tabs-custom { border: none; gap: 4px; }
+    .nav-tabs-custom .nav-link {
+        border: none; background: none;
+        color: #64748b; font-weight: 600; font-size: 0.88rem;
+        padding: 1.1rem 1.25rem;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        transition: all 0.2s ease;
+    }
+    .nav-tabs-custom .nav-link:hover { color: #0f172a; }
+    .nav-tabs-custom .nav-link.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+        background: none;
+    }
+
+    /* ─── Status Badges ─── */
+    .badge-published { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+    .badge-draft     { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+    .badge-cancelled { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
+    .badge-confirmed { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+    .badge-pending   { background:#fef9c3; color:#854d0e; border:1px solid #fde68a; }
+
+    /* ─── Recent Activity Feed ─── */
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.9rem;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.85rem; flex-shrink: 0;
+    }
+
+    /* ─── Table ─── */
+    .dash-table thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+    .dash-table tbody td {
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        font-size: 0.88rem;
+    }
+    .dash-table tbody tr:last-child td { border-bottom: none; }
+    .dash-table tbody tr:hover { background: #fafbfc; }
+
+    /* ─── Export bar ─── */
+    .export-bar {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animated-fade-in">
+
+    <!-- ═══════════════════════════════════════════
+         HEADER BANNER
+    ═══════════════════════════════════════════ -->
+    <div class="dash-header mb-4">
+        <div class="position-relative" style="z-index:1;">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge rounded-pill px-3 py-1" style="background:rgba(99,102,241,0.25);color:#a5b4fc;font-size:0.75rem;font-weight:600;">
+                            <i class="fa-solid fa-shield-halved me-1"></i>Admin Control Panel
+                        </span>
+                    </div>
+                    <h2 class="fw-bold text-white mb-1" style="font-size:1.75rem;">System Analytics Dashboard</h2>
+                    <p class="mb-0" style="color:#94a3b8;font-size:0.9rem;">
+                        <i class="fa-regular fa-clock me-1"></i>Real-time overview of EventPass platform metrics
+                    </p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'event_create' %}" class="btn btn-primary-custom btn-sm px-4">
+                        <i class="fa-solid fa-plus me-1"></i> New Event
+                    </a>
+                    <a href="{% url 'export_report' %}" class="btn btn-sm px-4" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);">
+                        <i class="fa-solid fa-file-csv me-1"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         KPI STAT CARDS ROW 1
+    ═══════════════════════════════════════════ -->
+    <div class="row g-3 mb-3">
+        <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+            <div class="stat-card s-indigo">
+                <div class="stat-icon si-indigo"><i class="fa-solid fa-users"></i></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value">{{ total_users }}</div>
+                    <div class="stat-sub">Registered accounts</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+            <div class="stat-card s-green">
+                <div class="stat-icon si-green"><i class="fa-solid fa-ticket"></i></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="stat-label">Bookings</div>
+                    <div class="stat-value">{{ total_bookings }}</div>
+                    <div class="stat-sub">Confirmed tickets</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+            <div class="stat-card s-amber">
+                <div class="stat-icon si-amber"><i class="fa-solid fa-coins"></i></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="stat-label">Revenue</div>
+                    <div class="stat-value" style="font-size:1.5rem;">{{ total_revenue|floatformat:0 }} <small style="font-size:0.7rem;font-weight:600;color:#94a3b8;">FCFA</small></div>
+                    <div class="stat-sub">Total sales</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+            <div class="stat-card s-red">
+                <div class="stat-icon si-red"><i class="fa-solid fa-calendar-check"></i></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="stat-label">Active Events</div>
+                    <div class="stat-value">{{ active_events }}</div>
+                    <div class="stat-sub">Published listings</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+            <div class="stat-card s-blue">
+                <div class="stat-icon si-blue"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="stat-label">Categories</div>
+                    <div class="stat-value">{{ total_categories }}</div>
+                    <div class="stat-sub">Event types</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-lg-4 col-md-6 col-6">
+            <div class="stat-card s-purple">
+                <div class="stat-icon si-purple"><i class="fa-solid fa-ban"></i></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="stat-label">Sold Out</div>
+                    <div class="stat-value">{{ sold_out_events }}</div>
+                    <div class="stat-sub">Capacity reached</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         CHARTS ROW
+    ═══════════════════════════════════════════ -->
+    <div class="row g-3 mb-3">
+        <div class="col-lg-5">
+            <div class="chart-card h-100">
+                <div class="chart-title"><i class="fa-solid fa-chart-pie me-2" style="color:var(--primary-color);"></i>Bookings by Category</div>
+                <div class="chart-sub">Distribution of confirmed ticket sales per event category</div>
+                <div style="height:250px;position:relative;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="chart-card h-100">
+                <div class="chart-title"><i class="fa-solid fa-chart-bar me-2" style="color:#10b981;"></i>Top Event Revenues</div>
+                <div class="chart-sub">Revenue generated per top-performing published event (FCFA)</div>
+                <div style="height:250px;position:relative;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         QUICK ACTIONS + RECENT ACTIVITY
+    ═══════════════════════════════════════════ -->
+    <div class="row g-3 mb-3">
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="chart-card h-100">
+                <div class="chart-title mb-3"><i class="fa-solid fa-bolt me-2" style="color:#f59e0b;"></i>Quick Actions</div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="{% url 'event_create' %}" class="quick-action-card">
+                        <div class="qa-icon"><i class="fa-solid fa-calendar-plus"></i></div>
+                        <div>
+                            <div class="qa-title">Create New Event</div>
+                            <div class="qa-sub">Add a new event listing</div>
+                        </div>
+                    </a>
+                    <a href="{% url 'event_list' %}" class="quick-action-card">
+                        <div class="qa-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div>
+                            <div class="qa-title">Browse All Events</div>
+                            <div class="qa-sub">View the public event listing</div>
+                        </div>
+                    </a>
+                    <a href="{% url 'export_report' %}" class="quick-action-card">
+                        <div class="qa-icon"><i class="fa-solid fa-file-csv"></i></div>
+                        <div>
+                            <div class="qa-title">Export Sales Report</div>
+                            <div class="qa-sub">Download all bookings as CSV</div>
+                        </div>
+                    </a>
+                    <a href="{% url 'export_report' %}?status=confirmed" class="quick-action-card">
+                        <div class="qa-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        <div>
+                            <div class="qa-title">Export Confirmed Only</div>
+                            <div class="qa-sub">Filter paid, confirmed tickets</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Bookings Activity -->
+        <div class="col-lg-8">
+            <div class="chart-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="chart-title"><i class="fa-solid fa-clock-rotate-left me-2" style="color:#6366f1;"></i>Recent Booking Activity</div>
+                        <div class="chart-sub mb-0">Latest 8 ticket transactions on the platform</div>
+                    </div>
+                </div>
+                {% for booking in recent_bookings %}
+                <div class="activity-item">
+                    <div class="activity-dot" style="background:{% if booking.status == 'confirmed' %}rgba(16,185,129,0.12){% elif booking.status == 'cancelled' %}rgba(239,68,68,0.12){% else %}rgba(245,158,11,0.12){% endif %}; color:{% if booking.status == 'confirmed' %}#10b981{% elif booking.status == 'cancelled' %}#ef4444{% else %}#f59e0b{% endif %};">
+                        <i class="fa-solid {% if booking.status == 'confirmed' %}fa-circle-check{% elif booking.status == 'cancelled' %}fa-circle-xmark{% else %}fa-clock{% endif %}"></i>
+                    </div>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div class="min-w-0">
+                                <span class="fw-semibold text-dark" style="font-size:0.88rem;">{{ booking.user.first_name }} {{ booking.user.last_name }}</span>
+                                <span class="text-muted" style="font-size:0.82rem;"> booked </span>
+                                <span class="fw-semibold" style="font-size:0.85rem;color:var(--primary-color);">{{ booking.event.title|truncatechars:35 }}</span>
+                            </div>
+                            <div class="text-end flex-shrink-0">
+                                <span class="badge rounded-pill badge-{{ booking.status }}" style="font-size:0.72rem;">{{ booking.status|capfirst }}</span>
+                                <div class="text-muted" style="font-size:0.72rem;margin-top:2px;">{{ booking.created_at|timesince }} ago</div>
+                            </div>
+                        </div>
+                        <div class="text-muted" style="font-size:0.75rem;margin-top:2px;">
+                            <i class="fa-solid fa-ticket me-1"></i> {{ booking.event.ticket_price|floatformat:0 }} FCFA &nbsp;|&nbsp;
+                            <i class="fa-solid fa-location-dot me-1"></i>{{ booking.event.venue|truncatechars:40 }}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fa-regular fa-face-smile-wink fa-2x mb-2 d-block"></i>No bookings yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         ADMIN NOTIFICATION CENTER
+    ═══════════════════════════════════════════ -->
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <div class="chart-title"><i class="fa-solid fa-bullhorn me-2" style="color:#6366f1;"></i>Send a User Notification</div>
+                        <div class="chart-sub mb-0">Publish an update that appears on user profiles and the dashboard.</div>
+                    </div>
+                    <span class="badge rounded-pill bg-primary-subtle text-primary">Admin Only</span>
+                </div>
+                <form method="POST" action="{% url 'send_notification' %}" class="row g-3">
+                    {% csrf_token %}
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Title</label>
+                        {{ notification_form.title }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Audience</label>
+                        {{ notification_form.target }}
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary-custom w-100">Publish Notification</button>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Message</label>
+                        {{ notification_form.message }}
+                    </div>
+                </form>
+
+                {% if notifications %}
+                <div class="mt-4">
+                    <div class="chart-sub mb-2">Recently published notifications</div>
+                    {% for item in notifications %}
+                    <div class="border rounded-3 p-3 mb-2 bg-light">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <h6 class="fw-semibold mb-1">{{ item.title }}</h6>
+                                <p class="small text-muted mb-0">{{ item.message }}</p>
+                            </div>
+                            <span class="badge bg-secondary-subtle text-secondary">{{ item.created_at|date:"d M Y" }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MANAGEMENT TABLES
+    ═══════════════════════════════════════════ -->
+    <div class="mgmt-card mb-5">
+        <div class="mgmt-tab-header">
+            <ul class="nav nav-tabs-custom nav-tabs" id="mgmtTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="events-tab" data-bs-toggle="tab" data-bs-target="#events-sheet" type="button" role="tab">
+                        <i class="fa-regular fa-calendar-days me-1"></i> Events Management
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings-sheet" type="button" role="tab">
+                        <i class="fa-solid fa-receipt me-1"></i> Bookings Log
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-sheet" type="button" role="tab">
+                        <i class="fa-solid fa-users me-1"></i> Registered Users
+                    </button>
+                </li>
+            </ul>
+
+            <!-- CSV Export Filter (inside header) -->
+            <form action="{% url 'export_report' %}" method="GET" class="d-flex gap-2 align-items-center py-2">
+                <select name="status" class="form-select form-select-sm" style="width:auto;font-size:0.82rem;">
+                    <option value="">All Statuses</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <button type="submit" class="btn btn-dark btn-sm px-3" style="font-size:0.82rem;">
+                    <i class="fa-solid fa-file-csv me-1"></i> Export
+                </button>
+            </form>
+        </div>
+
+        <div class="tab-content p-0" id="mgmtTabContent">
+
+            <!-- ── Events Sheet ── -->
+            <div class="tab-pane fade show active" id="events-sheet" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table dash-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Event Title</th>
+                                <th>Category</th>
+                                <th>Date</th>
+                                <th>Venue</th>
+                                <th>Capacity</th>
+                                <th>Price (FCFA)</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in events_list %}
+                            <tr>
+                                <td><code style="font-size:0.78rem;color:#6366f1;">#{{ event.id }}</code></td>
+                                <td>
+                                    <span class="fw-semibold text-dark" style="font-size:0.88rem;">{{ event.title|truncatechars:40 }}</span>
+                                </td>
+                                <td><span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.75rem;font-weight:600;">{{ event.category.name }}</span></td>
+                                <td><span class="text-muted" style="font-size:0.82rem;">{{ event.date }}</span></td>
+                                <td><span class="text-muted" style="font-size:0.82rem;">{{ event.venue|truncatechars:30 }}</span></td>
+                                <td>
+                                    <span style="font-size:0.82rem;font-weight:600;">{{ event.remaining_tickets }}</span>
+                                    <span class="text-muted" style="font-size:0.78rem;"> / {{ event.capacity }}</span>
+                                    {% if event.is_sold_out %}
+                                        <span class="badge ms-1" style="background:#fee2e2;color:#b91c1c;font-size:0.7rem;">SOLD OUT</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="fw-semibold" style="font-size:0.85rem;">{{ event.ticket_price|floatformat:0 }}</span></td>
+                                <td>
+                                    <span class="badge rounded-pill badge-{{ event.status }}" style="font-size:0.75rem;">
+                                        {{ event.status|capfirst }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown d-inline-block">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" style="font-size:0.78rem;padding:0.25rem 0.65rem;">
+                                            Manage
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" style="font-size:0.85rem;">
+                                            <li><a class="dropdown-item py-2" href="{% url 'event_detail' pk=event.pk %}"><i class="fa-regular fa-eye me-2 text-muted"></i>View Event</a></li>
+                                            <li><a class="dropdown-item py-2" href="{% url 'event_update' pk=event.pk %}"><i class="fa-regular fa-pen-to-square me-2 text-muted"></i>Edit Event</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item py-2 text-danger" href="{% url 'event_delete' pk=event.pk %}"><i class="fa-regular fa-trash-can me-2"></i>Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="9" class="text-center py-5 text-muted"><i class="fa-regular fa-calendar-xmark fa-2x mb-2 d-block"></i>No events listed.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── Bookings Sheet ── -->
+            <div class="tab-pane fade" id="bookings-sheet" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table dash-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Customer</th>
+                                <th>Event</th>
+                                <th>Category</th>
+                                <th>Date Booked</th>
+                                <th>Amount (FCFA)</th>
+                                <th>Payment</th>
+                                <th>Status</th>
+                                <th class="text-end">Ticket</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings_list %}
+                            <tr>
+                                <td><code style="font-size:0.75rem;color:#6366f1;">{{ booking.booking_reference|stringformat:".8s" }}…</code></td>
+                                <td>
+                                    <span class="fw-semibold text-dark" style="font-size:0.85rem;">{{ booking.user.first_name }} {{ booking.user.last_name }}</span>
+                                    <span class="d-block text-muted" style="font-size:0.75rem;">@{{ booking.user.username }}</span>
+                                </td>
+                                <td><span class="fw-semibold text-dark" style="font-size:0.82rem;max-width:160px;" class="d-inline-block text-truncate">{{ booking.event.title|truncatechars:32 }}</span></td>
+                                <td><span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.72rem;">{{ booking.event.category.name }}</span></td>
+                                <td><span class="text-muted" style="font-size:0.78rem;">{{ booking.created_at|date:"d M Y" }}</span></td>
+                                <td><span class="fw-semibold" style="font-size:0.85rem;">{{ booking.event.ticket_price|floatformat:0 }}</span></td>
+                                <td>
+                                    {% if booking.payment_status == 'paid' %}
+                                        <span class="badge badge-confirmed rounded-pill" style="font-size:0.72rem;">Paid</span>
+                                    {% else %}
+                                        <span class="badge badge-pending rounded-pill" style="font-size:0.72rem;">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill badge-{{ booking.status }}" style="font-size:0.72rem;">{{ booking.status|capfirst }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'booking_confirmation' booking_ref=booking.booking_reference %}" class="btn btn-sm" style="font-size:0.78rem;background:#f1f5f9;color:#475569;padding:0.25rem 0.7rem;">
+                                        <i class="fa-solid fa-ticket me-1"></i>View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="9" class="text-center py-5 text-muted"><i class="fa-regular fa-ticket fa-2x mb-2 d-block"></i>No bookings yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── Users Sheet ── -->
+            <div class="tab-pane fade" id="users-sheet" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table dash-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Date Joined</th>
+                                <th>Bookings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users_list %}
+                            <tr>
+                                <td><code style="font-size:0.78rem;color:#6366f1;">#{{ user.id }}</code></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width:32px;height:32px;font-size:0.8rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);flex-shrink:0;">
+                                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                        </div>
+                                        <span class="fw-semibold text-dark" style="font-size:0.88rem;">{{ user.first_name }} {{ user.last_name }}</span>
+                                    </div>
+                                </td>
+                                <td><span class="text-muted" style="font-size:0.82rem;">@{{ user.username }}</span></td>
+                                <td><span class="text-muted" style="font-size:0.82rem;">{{ user.email }}</span></td>
+                                <td>
+                                    {% if user.is_superuser %}
+                                        <span class="badge rounded-pill" style="background:#fef3c7;color:#b45309;font-size:0.72rem;border:1px solid #fde68a;"><i class="fa-solid fa-crown me-1"></i>Super Admin</span>
+                                    {% elif user.is_staff %}
+                                        <span class="badge rounded-pill" style="background:#ede9fe;color:#7c3aed;font-size:0.72rem;border:1px solid #ddd6fe;"><i class="fa-solid fa-user-shield me-1"></i>Staff</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.72rem;">Attendee</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="text-muted" style="font-size:0.78rem;">{{ user.date_joined|date:"d M Y" }}</span></td>
+                                <td>
+                                    <span class="fw-semibold" style="font-size:0.85rem;">{{ user.bookings.count }}</span>
+                                    <span class="text-muted" style="font-size:0.78rem;"> tickets</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center py-5 text-muted">No users found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- /tab-content -->
+    </div><!-- /mgmt-card -->
+
+</div><!-- /animated-fade-in -->
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const categoryLabels  = {{ category_labels|safe }};
+    const categoryCounts  = {{ category_counts|safe }};
+    const eventLabels     = {{ event_labels|safe }};
+    const eventRevenues   = {{ event_revenues|safe }};
+
+    // 1. Doughnut: Bookings by Category
+    new Chart(document.getElementById('categoryChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: categoryLabels.length ? categoryLabels : ['No Data'],
+            datasets: [{
+                data: categoryCounts.length ? categoryCounts : [1],
+                backgroundColor: ['#6366f1','#10b981','#f59e0b','#3b82f6','#ec4899','#8b5cf6','#ef4444','#14b8a6'],
+                borderWidth: 3,
+                borderColor: '#ffffff',
+                hoverBorderColor: '#ffffff',
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { family: 'Outfit', size: 11 }, padding: 16, usePointStyle: true }
+                }
+            }
+        }
+    });
+
+    // 2. Bar: Revenue per Event
+    new Chart(document.getElementById('revenueChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: eventLabels.length ? eventLabels : ['No Data'],
+            datasets: [{
+                label: 'Revenue (FCFA)',
+                data: eventRevenues.length ? eventRevenues : [0],
+                backgroundColor: 'rgba(99,102,241,0.85)',
+                borderColor: '#6366f1',
+                borderWidth: 0,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' },
+                    ticks: { font: { family: 'Outfit', size: 11 }, callback: v => v.toLocaleString() + ' F' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Outfit', size: 10 }, maxRotation: 35 }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

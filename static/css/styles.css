@@ -1,0 +1,83 @@
+/* Custom Variables and Global Resets */
+:root {
+    --indigo-primary: #6366f1;
+    --indigo-hover: #4f46e5;
+    --slate-deep: #0f172a;
+    --emerald-green: #10b981;
+    --amber-gold: #f59e0b;
+    --bg-slate-light: #f8fafc;
+    --card-border-subtle: rgba(226, 232, 240, 0.8);
+    --font-outfit: 'Outfit', -apple-system, sans-serif;
+}
+
+body {
+    font-family: var(--font-outfit);
+    background-color: var(--bg-slate-light);
+    color: #334155;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Base Card Styling */
+.card-custom {
+    border: 1px solid var(--card-border-subtle);
+    border-radius: 16px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.card-custom:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    border-color: rgba(99, 102, 241, 0.15);
+}
+
+/* Button Customizations */
+.btn-primary-custom {
+    background-color: var(--indigo-primary);
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.3);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary-custom:hover {
+    background-color: var(--indigo-hover);
+    color: #ffffff;
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.45);
+}
+
+.btn-primary-custom:active {
+    transform: translateY(0);
+}
+
+/* Glassmorphism Class Details */
+.glass-blur {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Typography styles */
+.font-semibold {
+    font-weight: 600;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+/* Animations */
+.transition-300 {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}

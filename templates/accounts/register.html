@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account - EventPass{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4 animated-fade-in">
+    <div class="col-lg-8 col-md-10">
+        <div class="card card-custom p-4 shadow-lg">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fa-solid fa-ticket-simple text-indigo fa-3x mb-3" style="color: var(--primary-color);"></i>
+                    <h2 class="fw-bold">Join EventPass</h2>
+                    <p class="text-muted">Create your attendee account to book and manage tickets</p>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" class="needs-validation">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <p class="mb-0 small"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <!-- First Name & Last Name -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_first_name" class="form-label fw-semibold">First Name</label>
+                            <input type="text" name="first_name" id="id_first_name" class="form-control bg-light {% if form.first_name.errors %}is-invalid{% endif %}" value="{{ form.first_name.value|default:'' }}" placeholder="John" required>
+                            {% for error in form.first_name.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_last_name" class="form-label fw-semibold">Last Name</label>
+                            <input type="text" name="last_name" id="id_last_name" class="form-control bg-light {% if form.last_name.errors %}is-invalid{% endif %}" value="{{ form.last_name.value|default:'' }}" placeholder="Doe" required>
+                            {% for error in form.last_name.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Username & Email -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_username" class="form-label fw-semibold">Username</label>
+                            <input type="text" name="username" id="id_username" class="form-control bg-light {% if form.username.errors %}is-invalid{% endif %}" value="{{ form.username.value|default:'' }}" placeholder="johndoe" required>
+                            {% for error in form.username.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_email" class="form-label fw-semibold">Email Address</label>
+                            <input type="email" name="email" id="id_email" class="form-control bg-light {% if form.email.errors %}is-invalid{% endif %}" value="{{ form.email.value|default:'' }}" placeholder="john@example.com" required>
+                            {% for error in form.email.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Phone Number & Profile Picture -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_phone_number" class="form-label fw-semibold">Phone Number</label>
+                            <input type="text" name="phone_number" id="id_phone_number" class="form-control bg-light {% if form.phone_number.errors %}is-invalid{% endif %}" value="{{ form.phone_number.value|default:'' }}" placeholder="+1234567890">
+                            {% for error in form.phone_number.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_profile_picture" class="form-label fw-semibold">Profile Picture</label>
+                            <input type="file" name="profile_picture" id="id_profile_picture" class="form-control bg-light {% if form.profile_picture.errors %}is-invalid{% endif %}">
+                            {% for error in form.profile_picture.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Password & Confirm Password -->
+                        <div class="col-md-6 mb-4">
+                            <label for="id_password" class="form-label fw-semibold">Password</label>
+                            <input type="password" name="password" id="id_password" class="form-control bg-light {% if form.password.errors %}is-invalid{% endif %}" placeholder="••••••••" required>
+                            {% for error in form.password.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="id_password_confirm" class="form-label fw-semibold">Confirm Password</label>
+                            <input type="password" name="password_confirm" id="id_password_confirm" class="form-control bg-light {% if form.password_confirm.errors %}is-invalid{% endif %}" placeholder="••••••••" required>
+                            {% for error in form.password_confirm.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2.5 fw-bold mb-3">
+                        Register Account <i class="fa-solid fa-user-plus ms-2"></i>
+                    </button>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <p class="small text-muted mb-0">Already have an account? <a href="{% url 'login' %}" class="fw-semibold text-decoration-none" style="color: var(--primary-color);">Sign In Here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

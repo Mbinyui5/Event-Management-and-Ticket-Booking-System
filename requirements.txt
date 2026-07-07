@@ -1,0 +1,7 @@
+Django>=5.0,<6.0
+qrcode[pil]>=8.0
+Pillow>=11.0
+gunicorn>=21.0
+whitenoise[brotli]>=6.0
+dj-database-url>=2.0
+psycopg2-binary>=2.9

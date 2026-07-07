@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ event.title }} - Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-hero-banner {
+        position: relative;
+        height: 380px;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .detail-hero-banner-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .detail-hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.4) 60%, rgba(15, 23, 42, 0.1) 100%);
+    }
+
+    .detail-hero-content {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 2.5rem;
+        color: #ffffff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animated-fade-in">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'event_list' %}" class="text-decoration-none">Events</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ event.title }}</li>
+        </ol>
+    </nav>
+
+    <!-- Detail Hero Banner -->
+    <div class="detail-hero-banner">
+        {% if event.image %}
+            <img src="{{ event.image.url }}" alt="{{ event.title }}" class="detail-hero-banner-img">
+        {% else %}
+            <img src="{% static 'images/categories/' %}{{ event.category.slug }}.png" alt="{{ event.title }}" class="detail-hero-banner-img" onerror="this.onerror=null; this.src='{% static 'images/categories/default.png' %}';">
+        {% endif %}
+        <div class="detail-hero-overlay"></div>
+        <div class="detail-hero-content">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-weight-500 mb-2">{{ event.category.name }}</span>
+            <h1 class="display-5 fw-bold mb-2">{{ event.title }}</h1>
+            <div class="d-flex flex-wrap gap-3 small text-slate-300" style="color: #cbd5e1;">
+                <span><i class="fa-solid fa-location-dot me-1 text-danger"></i> {{ event.venue }}</span>
+                <span><i class="fa-regular fa-calendar-days me-1 text-primary"></i> {{ event.date }}</span>
+                <span><i class="fa-regular fa-clock me-1 text-info"></i> {{ event.time }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Administrative Quick Links -->
+    {% if request.user.is_staff %}
+        <div class="alert alert-light border d-flex justify-content-between align-items-center mb-4 p-3 rounded-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning text-dark"><i class="fa-solid fa-unlock-keyhole"></i> Admin Panel</span>
+                <span class="small text-muted">This event is in <strong>{{ event.get_status_display }}</strong> status.</span>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'event_update' pk=event.pk %}" class="btn btn-sm btn-outline-dark"><i class="fa-regular fa-pen-to-square me-1"></i> Edit Event</a>
+                <a href="{% url 'event_delete' pk=event.pk %}" class="btn btn-sm btn-outline-danger"><i class="fa-regular fa-trash-can me-1"></i> Delete Event</a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Main Content Layout -->
+    <div class="row g-4">
+        <!-- Event Details Description -->
+        <div class="col-lg-8 col-md-12">
+            <div class="card card-custom p-4 shadow-sm h-100">
+                <h4 class="fw-bold mb-3 border-bottom pb-2">Event Description</h4>
+                <div class="card-text text-muted" style="line-height: 1.7; font-size: 1.05rem; white-space: pre-line;">
+                    {{ event.description }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Booking Sidebar -->
+        <div class="col-lg-4 col-md-12">
+            <div class="card card-custom p-4 shadow-sm border-2" style="border-color: rgba(99, 102, 241, 0.2);">
+                <h4 class="fw-bold mb-4 text-center">Ticket Booking</h4>
+                
+                <div class="bg-light p-3 rounded-3 mb-4 text-center">
+                    <span class="text-muted small d-block mb-1">TICKET PRICE</span>
+                    <span class="display-6 fw-bold text-dark">
+                        {% if event.ticket_price == 0 %}Free{% else %}{{ event.ticket_price|floatformat:0 }} FCFA{% endif %}
+                    </span>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between border-bottom py-2 small">
+                        <span class="text-muted">Total Capacity</span>
+                        <span class="fw-semibold text-dark">{{ event.capacity }} seats</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom py-2 small">
+                        <span class="text-muted">Availability</span>
+                        {% if event.is_sold_out %}
+                            <span class="fw-bold text-danger">Sold Out</span>
+                        {% else %}
+                            <span class="fw-semibold text-success">{{ event.remaining_tickets }} tickets remaining</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between py-2 small">
+                        <span class="text-muted">Status</span>
+                        <span class="badge {% if event.status == 'published' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %}">{{ event.get_status_display }}</span>
+                    </div>
+                </div>
+
+                {% if event.is_sold_out %}
+                    <div class="d-grid">
+                        <button class="btn btn-secondary py-3 fw-bold rounded-3" disabled>
+                            <i class="fa-solid fa-ban me-1"></i> Sold Out
+                        </button>
+                    </div>
+                {% elif event.status != 'published' %}
+                    <div class="d-grid">
+                        <button class="btn btn-secondary py-3 fw-bold rounded-3" disabled>
+                            <i class="fa-solid fa-lock me-1"></i> Bookings Closed
+                        </button>
+                    </div>
+                {% else %}
+                    <div class="d-grid">
+                        {% if request.user.is_authenticated %}
+                            <form method="POST" action="{% url 'book_ticket' event_id=event.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary-custom w-100 py-3 fw-bold rounded-3">
+                                    Book Ticket Now <i class="fa-solid fa-arrow-right ms-2"></i>
+                                </button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary-custom py-3 fw-bold rounded-3">
+                                Login to Book Ticket <i class="fa-solid fa-arrow-right-to-bracket ms-2"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

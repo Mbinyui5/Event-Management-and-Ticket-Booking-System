@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Explore Events - EventPass{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Premium search hero section */
+    .hero-search-section {
+        background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+        padding: 4rem 2rem;
+        border-radius: 24px;
+        color: #ffffff;
+        margin-bottom: 2.5rem;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .category-badge-btn {
+        border-radius: 30px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #cbd5e1;
+        background-color: rgba(255, 255, 255, 0.05);
+        text-decoration: none;
+    }
+
+    .category-badge-btn:hover, .category-badge-btn.active {
+        background-color: var(--primary-color);
+        color: #ffffff;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+    }
+
+    .event-card-img-wrapper {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .event-card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .card-custom:hover .event-card-img {
+        transform: scale(1.08);
+    }
+
+    .event-price-tag {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background-color: rgba(15, 23, 42, 0.85);
+        color: #ffffff;
+        font-weight: 700;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        backdrop-filter: blur(5px);
+        font-size: 0.95rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animated-fade-in">
+    <!-- Hero / Search Section -->
+    <div class="hero-search-section text-center">
+        <h1 class="display-5 fw-bold mb-3">Discover Incredible Events</h1>
+        <p class="lead text-slate-300 mb-4" style="color: #cbd5e1;">Find and book tickets for the best music concerts, tech conferences, and exhibitions.</p>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <form method="GET" action="{% url 'event_list' %}" class="input-group input-group-lg shadow rounded-3 overflow-hidden">
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control border-0 px-4 py-3 bg-white" placeholder="Search events by title, description or venue..." aria-label="Search events">
+                    {% if selected_category %}
+                        <input type="hidden" name="category" value="{{ selected_category }}">
+                    {% endif %}
+                    <button class="btn btn-primary-custom px-4" type="submit">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Search
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Category Filters -->
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+            <a href="?{% if search_query %}q={{ search_query }}{% endif %}" class="category-badge-btn {% if not selected_category %}active{% endif %}">
+                All Categories
+            </a>
+            {% for cat in categories %}
+                <a href="?category={{ cat.slug }}{% if search_query %}&q={{ search_query }}{% endif %}" class="category-badge-btn {% if selected_category == cat.slug %}active{% endif %}">
+                    {{ cat.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Listings Title -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">
+                {% if selected_category %}
+                    Category: {% for cat in categories %}{% if cat.slug == selected_category %}{{ cat.name }}{% endif %}{% endfor %}
+                {% elif search_query %}
+                    Search Results for "{{ search_query }}"
+                {% else %}
+                    Upcoming Events
+                {% endif %}
+            </h3>
+            <p class="text-muted small mb-0">Explore available seats and reserve your tickets instantly.</p>
+        </div>
+        
+        {% if request.user.is_staff %}
+            <a href="{% url 'event_create' %}" class="btn btn-primary-custom btn-sm"><i class="fa-solid fa-plus me-1"></i> Create Event</a>
+        {% endif %}
+    </div>
+
+    <!-- Event Cards Grid -->
+    {% if page_obj %}
+        <div class="row g-4 mb-5">
+            {% for event in page_obj %}
+                <div class="col-lg-4 col-md-6 col-12">
+                    <div class="card card-custom h-100 shadow-sm d-flex flex-column">
+                        <div class="event-card-img-wrapper">
+                            {% if event.image %}
+                                <img src="{{ event.image.url }}" alt="{{ event.title }}" class="event-card-img">
+                            {% else %}
+                                <img src="{% static 'images/categories/' %}{{ event.category.slug }}.png" alt="{{ event.title }}" class="event-card-img" onerror="this.onerror=null; this.src='{% static 'images/categories/default.png' %}';">
+                            {% endif %}
+                            <div class="event-price-tag">
+                                {% if event.ticket_price == 0 %}Free{% else %}{{ event.ticket_price|floatformat:0 }} FCFA{% endif %}
+                            </div>
+                        </div>
+                        <div class="card-body p-4 d-flex flex-column flex-grow-1">
+                            <div class="mb-2">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-weight-500 small">{{ event.category.name }}</span>
+                            </div>
+                            <h4 class="card-title fw-bold mb-2 text-truncate">{{ event.title }}</h4>
+                            <p class="card-text text-muted small flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; height: 3.6rem;">
+                                {{ event.description }}
+                            </p>
+                            <div class="border-top pt-3 mt-3">
+                                <div class="d-flex align-items-center gap-2 text-muted small mb-2">
+                                    <i class="fa-solid fa-location-dot text-danger" style="width: 16px;"></i>
+                                    <span class="text-truncate" style="max-width: 250px;">{{ event.venue }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+                                    <i class="fa-regular fa-calendar-days text-primary" style="width: 16px;"></i>
+                                    <span>{{ event.date }} at {{ event.time }}</span>
+                                </div>
+                                
+                                <div class="d-flex align-items-center justify-content-between mt-auto">
+                                    <div class="small">
+                                        {% if event.is_sold_out %}
+                                            <span class="text-danger fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> Sold Out</span>
+                                        {% else %}
+                                            <span class="text-success fw-bold"><i class="fa-solid fa-circle-check me-1"></i> {{ event.remaining_tickets }} seats left</span>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'event_detail' pk=event.pk %}" class="btn btn-sm btn-outline-primary rounded-3 px-3 fw-semibold">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <nav aria-label="Event pagination" class="my-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    {% endif %}
+
+                    {% for i in page_obj.paginator.page_range %}
+                        {% if page_obj.number == i %}
+                            <li class="page-item active" aria-current="page"><span class="page-link" style="background-color: var(--primary-color); border-color: var(--primary-color);">{{ i }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link text-dark" href="?page={{ i }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="card p-5 text-center my-5 shadow-sm border rounded-4 bg-white">
+            <div class="card-body">
+                <i class="fa-regular fa-calendar-xmark fa-4x text-light mb-3"></i>
+                <h4 class="fw-bold">No Events Found</h4>
+                <p class="text-muted small mb-4">We couldn't find any events matching your search criteria or category filter.</p>
+                <a href="{% url 'event_list' %}" class="btn btn-primary-custom px-4">Reset Search Filters</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

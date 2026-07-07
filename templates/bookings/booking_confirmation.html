@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed — {{ booking.event.title }} | EventPass{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ─── Page wrapper ─── */
+    .confirm-wrapper {
+        max-width: 820px;
+        margin: 0 auto;
+    }
+
+    /* ─── Success Banner ─── */
+    .success-banner {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    .success-banner::before {
+        content: '';
+        position: absolute;
+        top: -50px; right: -50px;
+        width: 180px; height: 180px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+    }
+    .success-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -60px; left: -20px;
+        width: 220px; height: 220px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+    }
+    .success-check-ring {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1.25rem;
+        position: relative; z-index: 1;
+        animation: checkPop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes checkPop {
+        from { transform: scale(0); opacity:0; }
+        to   { transform: scale(1); opacity:1; }
+    }
+
+    /* ─── Ticket Card ─── */
+    .ticket-wrap {
+        filter: drop-shadow(0 12px 30px rgba(0,0,0,0.10));
+        margin-bottom: 1.5rem;
+    }
+    .ticket-card {
+        background: #ffffff;
+        border-radius: 22px;
+        overflow: hidden;
+        display: flex;
+        position: relative;
+    }
+    @media (max-width: 640px) {
+        .ticket-card { flex-direction: column; }
+        .ticket-stub {
+            border-left: none !important;
+            border-top: 2px dashed #e2e8f0 !important;
+            padding: 1.75rem !important;
+            text-align: center;
+        }
+        .ticket-card::before, .ticket-card::after { display: none !important; }
+    }
+
+    /* Circular punch-hole cutouts at the tear line */
+    .ticket-card::before, .ticket-card::after {
+        content: '';
+        position: absolute;
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        background: var(--bg-light);
+        left: 69%;
+        z-index: 5;
+        border: 1px solid #e2e8f0;
+    }
+    .ticket-card::before { top: -14px; }
+    .ticket-card::after  { bottom: -14px; }
+
+    /* ─── Ticket body ─── */
+    .ticket-body {
+        flex: 7;
+        padding: 2.25rem 2.5rem;
+    }
+    .ticket-stub {
+        flex: 3;
+        background: #fafbfd;
+        border-left: 2.5px dashed #e2e8f0;
+        padding: 2.25rem 1.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    /* ─── Category pill ─── */
+    .cat-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(99,102,241,0.1);
+        color: #6366f1;
+        font-size: 0.78rem; font-weight: 700;
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(99,102,241,0.2);
+        letter-spacing: 0.03em;
+    }
+
+    /* ─── Ticket info grid ─── */
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem 2rem;
+        margin-top: 1.5rem;
+    }
+    .info-row {
+        display: flex; flex-direction: column; gap: 2px;
+    }
+    .info-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #94a3b8;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .info-val {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .info-sub {
+        font-size: 0.78rem;
+        color: #94a3b8;
+    }
+
+    /* ─── Divider inside ticket ─── */
+    .ticket-divider {
+        border: none;
+        border-top: 1px solid #f1f5f9;
+        margin: 1.5rem 0;
+    }
+
+    /* ─── QR Code ─── */
+    .qr-wrap {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 10px;
+        display: inline-block;
+    }
+    .qr-wrap img {
+        width: 130px; height: 130px;
+        display: block;
+        border-radius: 8px;
+    }
+    .scan-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #94a3b8;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .ticket-number-badge {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: #ffffff;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+        letter-spacing: 0.05em;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* ─── Payment Summary Card ─── */
+    .payment-card {
+        background: #ffffff;
+        border: 1px solid rgba(226,232,240,0.8);
+        border-radius: 18px;
+        padding: 1.75rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem;
+    }
+    .pay-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0.6rem 0;
+        border-bottom: 1px dashed #f1f5f9;
+        font-size: 0.9rem;
+    }
+    .pay-row:last-child { border-bottom: none; }
+    .pay-total {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .pay-total-val {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #10b981;
+    }
+
+    /* ─── Action Buttons ─── */
+    .action-bar {
+        display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+    .btn-print {
+        background: #0f172a;
+        color: #ffffff;
+        border: none;
+        padding: 0.7rem 1.8rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-print:hover { background: #1e293b; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); color: #fff; }
+    .btn-back {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        padding: 0.7rem 1.8rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-back:hover { background: #e2e8f0; color: #0f172a; }
+
+    /* ─── Print styles ─── */
+    @media print {
+        body * { visibility: hidden; }
+        nav, footer, .action-bar, nav[aria-label="breadcrumb"], .success-banner, .payment-card, .next-steps { display: none !important; }
+        .ticket-wrap, .ticket-wrap * { visibility: visible; }
+        .ticket-wrap { position: absolute; left: 0; top: 0; width: 100%; filter: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirm-wrapper animated-fade-in">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'event_list' %}" class="text-decoration-none">Events</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'event_detail' pk=booking.event.pk %}" class="text-decoration-none">{{ booking.event.title|truncatechars:30 }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Booking Confirmation</li>
+        </ol>
+    </nav>
+
+    <!-- ═══ SUCCESS BANNER ═══ -->
+    <div class="success-banner">
+        <div class="position-relative" style="z-index:1;">
+            <div class="success-check-ring">
+                <i class="fa-solid fa-check text-white" style="font-size:2.2rem;"></i>
+            </div>
+            <h2 class="fw-bold text-white mb-1" style="font-size:1.8rem;">Booking Confirmed!</h2>
+            <p class="mb-2" style="color:rgba(255,255,255,0.85);font-size:0.95rem;">
+                Your ticket for <strong>{{ booking.event.title }}</strong> is ready.
+            </p>
+            <span style="background:rgba(255,255,255,0.18);color:#fff;font-size:0.78rem;font-weight:600;padding:0.3rem 1rem;border-radius:999px;letter-spacing:0.04em;">
+                <i class="fa-solid fa-envelope me-1"></i> A confirmation has been recorded to your account
+            </span>
+        </div>
+    </div>
+
+    <!-- ═══ DIGITAL TICKET ═══ -->
+    <div class="ticket-wrap">
+        <div class="ticket-card">
+
+            <!-- Left body -->
+            <div class="ticket-body">
+
+                <!-- Top row: category + reference -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="cat-pill">
+                        <i class="fa-solid fa-tag"></i>
+                        {{ booking.event.category.name }}
+                    </span>
+                    <span style="font-size:0.75rem;color:#94a3b8;">
+                        REF: <strong style="color:#475569;font-family:'Courier New',monospace;">{{ booking.booking_reference|stringformat:".8s" }}…</strong>
+                    </span>
+                </div>
+
+                <!-- Event title & venue -->
+                <h3 class="fw-bold text-dark mb-1" style="font-size:1.4rem;line-height:1.2;">{{ booking.event.title }}</h3>
+                <p class="mb-0" style="font-size:0.87rem;color:#64748b;">
+                    <i class="fa-solid fa-location-dot me-1" style="color:#ef4444;"></i>{{ booking.event.venue }}
+                </p>
+
+                <!-- Info grid -->
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label"><i class="fa-regular fa-calendar me-1"></i>Date</span>
+                        <span class="info-val">{{ booking.event.date|date:"l, d M Y" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="fa-regular fa-clock me-1"></i>Time</span>
+                        <span class="info-val">{{ booking.event.time|time:"g:i A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="fa-regular fa-user me-1"></i>Attendee</span>
+                        <span class="info-val">{{ booking.user.first_name }} {{ booking.user.last_name }}</span>
+                        <span class="info-sub">@{{ booking.user.username }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="fa-solid fa-envelope me-1"></i>Email</span>
+                        <span class="info-val" style="font-size:0.82rem;word-break:break-all;">{{ booking.user.email }}</span>
+                    </div>
+                </div>
+
+                <hr class="ticket-divider">
+
+                <!-- Ticket number row -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <div class="info-label mb-1">Ticket Number</div>
+                        <span class="ticket-number-badge">{{ booking.ticket.ticket_number }}</span>
+                    </div>
+                    <div class="text-end">
+                        <div class="info-label mb-1">Booking Status</div>
+                        {% if booking.status == 'confirmed' %}
+                            <span class="badge rounded-pill py-2 px-3" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-size:0.82rem;">
+                                <i class="fa-solid fa-circle-check me-1"></i>Confirmed
+                            </span>
+                        {% else %}
+                            <span class="badge rounded-pill py-2 px-3" style="background:#fee2e2;color:#b91c1c;font-size:0.82rem;">{{ booking.status|capfirst }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div><!-- /ticket-body -->
+
+            <!-- Right stub -->
+            <div class="ticket-stub">
+                <div class="qr-wrap">
+                    <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="QR Code for {{ booking.ticket.ticket_number }}">
+                </div>
+                <div class="scan-label">Scan for admission</div>
+                {% if booking.ticket.is_checked_in %}
+                    <span class="badge rounded-pill py-2 px-3" style="background:#e2e8f0;color:#475569;font-size:0.8rem;">
+                        <i class="fa-solid fa-door-open me-1"></i> Admitted
+                    </span>
+                {% else %}
+                    <span class="badge rounded-pill py-2 px-3" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-size:0.8rem;">
+                        <i class="fa-solid fa-ticket-simple me-1"></i> Active
+                    </span>
+                {% endif %}
+                <div class="text-center" style="font-size:0.7rem;color:#94a3b8;">
+                    Present at venue entrance
+                </div>
+            </div>
+
+        </div><!-- /ticket-card -->
+    </div><!-- /ticket-wrap -->
+
+    <!-- ═══ PAYMENT SUMMARY ═══ -->
+    <div class="payment-card">
+        <h6 class="fw-bold text-dark mb-3" style="font-size:0.95rem;">
+            <i class="fa-solid fa-receipt me-2" style="color:#6366f1;"></i>Payment Summary
+        </h6>
+        <div class="pay-row">
+            <span class="text-muted">Ticket Type</span>
+            <span class="fw-semibold">General Admission — {{ booking.event.category.name }}</span>
+        </div>
+        <div class="pay-row">
+            <span class="text-muted">Quantity</span>
+            <span class="fw-semibold">× 1</span>
+        </div>
+        <div class="pay-row">
+            <span class="text-muted">Unit Price</span>
+            <span class="fw-semibold">
+                {% if booking.event.ticket_price == 0 %}Free{% else %}{{ booking.event.ticket_price|floatformat:0 }} FCFA{% endif %}
+            </span>
+        </div>
+        <div class="pay-row">
+            <span class="text-muted">Payment Status</span>
+            {% if booking.payment_status == 'paid' %}
+                <span style="color:#10b981;font-weight:700;"><i class="fa-solid fa-circle-check me-1"></i>Paid</span>
+            {% else %}
+                <span style="color:#f59e0b;font-weight:700;">Pending</span>
+            {% endif %}
+        </div>
+        <div class="pay-row" style="border-bottom:none;padding-top:0.9rem;">
+            <span class="pay-total">Total Charged</span>
+            <span class="pay-total-val">
+                {% if booking.event.ticket_price == 0 %}🎉 Free Entry{% else %}{{ booking.event.ticket_price|floatformat:0 }} FCFA{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- ═══ ACTION BUTTONS ═══ -->
+    <div class="action-bar">
+        <button onclick="window.print();" class="btn-print">
+            <i class="fa-solid fa-print"></i> Print / Save as PDF
+        </button>
+        <a href="{% url 'my_bookings' %}" class="btn-back">
+            <i class="fa-solid fa-receipt"></i> My Bookings
+        </a>
+        <a href="{% url 'event_list' %}" class="btn-back">
+            <i class="fa-solid fa-calendar-days"></i> Browse More Events
+        </a>
+    </div>
+
+    <!-- ═══ NEXT STEPS INFO BOX ═══ -->
+    <div class="next-steps" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;margin-bottom:2rem;">
+        <h6 class="fw-bold text-dark mb-3" style="font-size:0.9rem;">
+            <i class="fa-solid fa-circle-info me-2" style="color:#6366f1;"></i>What's next?
+        </h6>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="d-flex gap-2 align-items-start">
+                    <div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,0.1);color:#6366f1;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;"><i class="fa-solid fa-mobile-screen"></i></div>
+                    <div>
+                        <div class="fw-semibold text-dark" style="font-size:0.85rem;">Save your ticket</div>
+                        <div class="text-muted" style="font-size:0.78rem;">Print or screenshot this page for entry at the venue.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2 align-items-start">
+                    <div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,0.1);color:#10b981;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;"><i class="fa-solid fa-clock"></i></div>
+                    <div>
+                        <div class="fw-semibold text-dark" style="font-size:0.85rem;">Arrive on time</div>
+                        <div class="text-muted" style="font-size:0.78rem;">Doors open 30 minutes before the event start time.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2 align-items-start">
+                    <div style="width:30px;height:30px;border-radius:8px;background:rgba(245,158,11,0.1);color:#f59e0b;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;"><i class="fa-solid fa-qrcode"></i></div>
+                    <div>
+                        <div class="fw-semibold text-dark" style="font-size:0.85rem;">Show QR at gate</div>
+                        <div class="text-muted" style="font-size:0.78rem;">Staff will scan your QR code or ticket number for entry.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /confirm-wrapper -->
+{% endblock %}

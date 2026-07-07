@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - EventPass{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4 animated-fade-in">
+    <div class="col-lg-8 col-md-10">
+        <div class="card card-custom p-4 shadow-md">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                    <h2 class="fw-bold mb-0">{{ title }}</h2>
+                    <a href="{% if event %}{% url 'event_detail' pk=event.pk %}{% else %}{% url 'event_list' %}{% endif %}" class="btn btn-sm btn-outline-secondary">Cancel</a>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <!-- Event Title -->
+                        <div class="col-12 mb-3">
+                            <label for="id_title" class="form-label fw-semibold">Event Title</label>
+                            {{ form.title }}
+                            {% for error in form.title.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Description -->
+                        <div class="col-12 mb-3">
+                            <label for="id_description" class="form-label fw-semibold">Description</label>
+                            {{ form.description }}
+                            {% for error in form.description.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Category & Status -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_category" class="form-label fw-semibold">Category</label>
+                            {{ form.category }}
+                            {% for error in form.category.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_status" class="form-label fw-semibold">Status</label>
+                            {{ form.status }}
+                            {% for error in form.status.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Date & Time -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_date" class="form-label fw-semibold">Date</label>
+                            {{ form.date }}
+                            {% for error in form.date.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_time" class="form-label fw-semibold">Time</label>
+                            {{ form.time }}
+                            {% for error in form.time.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Venue -->
+                        <div class="col-12 mb-3">
+                            <label for="id_venue" class="form-label fw-semibold">Venue</label>
+                            {{ form.venue }}
+                            {% for error in form.venue.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Capacity & Ticket Price -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_capacity" class="form-label fw-semibold">Total Capacity</label>
+                            {{ form.capacity }}
+                            {% for error in form.capacity.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_ticket_price" class="form-label fw-semibold">Ticket Price (FCFA)</label>
+                            {{ form.ticket_price }}
+                            {% for error in form.ticket_price.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Image Upload -->
+                        <div class="col-12 mb-4">
+                            <label for="id_image" class="form-label fw-semibold">Banner Image</label>
+                            {{ form.image }}
+                            {% for error in form.image.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2.5 fw-bold">
+                        Save Event <i class="fa-solid fa-circle-check ms-1"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

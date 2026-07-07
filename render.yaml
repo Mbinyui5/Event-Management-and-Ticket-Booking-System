@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: eventpass
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput"
+    startCommand: "gunicorn event_manager_project.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://eventpass.onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: eventpass-db
+          property: connectionString
+
+databases:
+  - name: eventpass-db
+    databaseName: eventpass
+    user: eventpass
